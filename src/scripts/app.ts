@@ -1,6 +1,3 @@
-/**
- * Created by Angular2 on 15-11-2.
- */
 import {Component, bootstrap} from "angular2/angular2";
 @Component({
     selector: 'my-app',
