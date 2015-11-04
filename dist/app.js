@@ -9,14 +9,27 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var angular2_1 = require("angular2/angular2");
+var angular2_1 = require('angular2/angular2');
+var Hero = (function () {
+    function Hero() {
+    }
+    return Hero;
+})();
 var AppComponent = (function () {
     function AppComponent() {
+        this.title = 'Lakers';
+        this.hero = {
+            id: 24,
+            name: 'Kobe Bryant',
+            team: 'Lakers',
+            age: 37
+        };
     }
     AppComponent = __decorate([
         angular2_1.Component({
             selector: 'my-app',
-            template: '<h1>我的第一个 Angular 2 程序</h1>'
+            template: "\n    <h1>{{title}}</h1>\n    <h2>{{hero.name}} details!</h2>\n    <div>\n    <label>ID:</label>\n    {{hero.id}}\n    </div>\n    <div>\n    <label>Name:</label>\n    {{hero.name}}\n    </div>\n    <div>\n    <label>Age:</label>\n    <input [(ng-model)]=\"hero.age\" placeholder=\"Input Age\"/>\n    {{hero.age}}\n    </div>\n    ",
+            directives: [angular2_1.FORM_DIRECTIVES]
         }), 
         __metadata('design:paramtypes', [])
     ], AppComponent);
