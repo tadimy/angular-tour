@@ -27,8 +27,7 @@ var AppComponent = (function () {
     }
     AppComponent = __decorate([
         angular2_1.Component({
-            selector: 'my-app',
-            template: "\n    <h1>{{title}}</h1>\n    <h2>{{hero.name}} details!</h2>\n    <div>\n    <label>ID:</label>\n    {{hero.id}}\n    </div>\n    <div>\n    <label>Name:</label>\n    {{hero.name}}\n    </div>\n    <div>\n    <label>Age:</label>\n    <input [(ng-model)]=\"hero.age\" placeholder=\"Input Age\"/>\n    {{hero.age}}\n    </div>\n    ",
+            selector: 'post-list',
             directives: [angular2_1.FORM_DIRECTIVES]
         }), 
         __metadata('design:paramtypes', [])

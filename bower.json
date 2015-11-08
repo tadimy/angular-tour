@@ -1,0 +1,21 @@
+{
+  "name": "ng.vaivei.com",
+  "version": "0.0.1",
+  "authors": [
+    "tadimy <toleranhink@gmail.com>"
+  ],
+  "description": "An Angular2 Tour",
+  "license": "MIT",
+  "homepage": "ng.vaivei.com",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.0",
+    "jquery": "~2.1.3"
+  }
+}

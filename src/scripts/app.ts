@@ -8,24 +8,8 @@ class Hero {
 }
 
 @Component({
-    selector: 'my-app',
-    template: `
-    <h1>{{title}}</h1>
-    <h2>{{hero.name}} details!</h2>
-    <div>
-    <label>ID:</label>
-    {{hero.id}}
-    </div>
-    <div>
-    <label>Name:</label>
-    {{hero.name}}
-    </div>
-    <div>
-    <label>Age:</label>
-    <input [(ng-model)]="hero.age" placeholder="Input Age"/>
-    {{hero.age}}
-    </div>
-    `,
+    selector: 'post-list',
+
     directives: [FORM_DIRECTIVES]
 })
 
