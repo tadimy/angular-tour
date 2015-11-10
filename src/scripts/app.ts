@@ -20,10 +20,8 @@ class PostComponent {
     public request;
 
     constructor(jsonp:Http) {
-        //jsonp.request('http://ng.vaivei.com/api_json/get_recent_posts/')
-        jsonp.request('http://127.0.0.1:8080/src/data/empty.json?callback=JSON_CALLBACK')
+        jsonp.request('http://ng.vaivei.com/api_json/get_recent_posts/')
             .subscribe(response => this.post_list = response.json());
-            //.subscribe((res:Response) => console.log(res.json()));
         console.log(this.post_list);
 
     }

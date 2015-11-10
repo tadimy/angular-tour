@@ -10,28 +10,28 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var angular2_1 = require('angular2/angular2');
+var http_1 = require('angular2/http');
 var Hero = (function () {
     function Hero() {
     }
     return Hero;
 })();
-var AppComponent = (function () {
-    function AppComponent() {
-        this.title = 'Lakers';
-        this.hero = {
-            id: 24,
-            name: 'Kobe Bryant',
-            team: 'Lakers',
-            age: 37
-        };
+var PostComponent = (function () {
+    function PostComponent(jsonp) {
+        var _this = this;
+        jsonp.request('http://ng.vaivei.com/api_json/get_recent_posts/')
+            .subscribe(function (response) { return _this.post_list = response.json(); });
+        console.log(this.post_list);
     }
-    AppComponent = __decorate([
+    PostComponent = __decorate([
         angular2_1.Component({
             selector: 'post-list',
-            directives: [angular2_1.FORM_DIRECTIVES]
+            templateUrl: 'jade/post-list.html',
+            viewProviders: [http_1.HTTP_PROVIDERS, http_1.JSONP_PROVIDERS],
+            directives: [angular2_1.NgFor]
         }), 
-        __metadata('design:paramtypes', [])
-    ], AppComponent);
-    return AppComponent;
+        __metadata('design:paramtypes', [http_1.Http])
+    ], PostComponent);
+    return PostComponent;
 })();
-angular2_1.bootstrap(AppComponent);
+angular2_1.bootstrap(PostComponent);
