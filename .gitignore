@@ -55,6 +55,7 @@ node_modules
 
 # Mongo Explorer plugin:
 # .idea/mongoSettings.xml
+*.html
 
 ## File-based project format:
 *.ipr
