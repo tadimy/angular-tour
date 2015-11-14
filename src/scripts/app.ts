@@ -1,6 +1,6 @@
 import {bootstrap, Component, NgFor, provide} from 'angular2/angular2';
 import {Http, HTTP_PROVIDERS, Jsonp, JSONP_PROVIDERS,Response} from 'angular2/http';
-class Category {
+interface Category {
     id:number;
     slug:string;
     title:string;
@@ -8,7 +8,7 @@ class Category {
     parent:number;
     post_count:number;
 }
-class Post {
+interface Post {
     id:number;
     type:string;
     url:string;
@@ -26,7 +26,7 @@ class Post {
     custom_fields:string;
 }
 
-class PostList {
+interface PostList {
     count:number;
     count_total:number;
     pages:number;
@@ -40,9 +40,19 @@ class PostList {
 })
 
 class PostListComponent {
-    public post_list:PostList;
+    public post_list:PostList = {
+        count: 0,
+        count_total: 0,
+        pages: 0,
+        posts: []
+    };
+    public response;
 
     constructor(jsonp:Http) {
+        this.getRecentPosts(jsonp);
+    }
+
+    getRecentPosts(jsonp:Http) {
         jsonp.request('http://ng.vaivei.com/api_json/get_recent_posts/')
             .subscribe(response => this.post_list = response.json());
     }

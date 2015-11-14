@@ -11,27 +11,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var angular2_1 = require('angular2/angular2');
 var http_1 = require('angular2/http');
-var Category = (function () {
-    function Category() {
-    }
-    return Category;
-})();
-var Post = (function () {
-    function Post() {
-    }
-    return Post;
-})();
-var PostList = (function () {
-    function PostList() {
-    }
-    return PostList;
-})();
 var PostListComponent = (function () {
     function PostListComponent(jsonp) {
+        this.post_list = {
+            count: 0,
+            count_total: 0,
+            pages: 0,
+            posts: []
+        };
+        this.getRecentPosts(jsonp);
+    }
+    PostListComponent.prototype.getRecentPosts = function (jsonp) {
         var _this = this;
         jsonp.request('http://ng.vaivei.com/api_json/get_recent_posts/')
             .subscribe(function (response) { return _this.post_list = response.json(); });
-    }
+    };
     PostListComponent = __decorate([
         angular2_1.Component({
             selector: 'post-list',
