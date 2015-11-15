@@ -15,17 +15,16 @@ interface Post {
     slug:string;
     status:string;
     title:number;
-    data:string;
+    date:string;
     title_plain:string;
     content:string;
     modified:string;
     categories:Category;
-    comments:string;
+    comments:any;
     comment_count:number;
     comment_status:string;
     custom_fields:string;
 }
-
 interface PostList {
     count:number;
     count_total:number;
@@ -38,7 +37,6 @@ interface PostList {
     viewProviders: [HTTP_PROVIDERS, JSONP_PROVIDERS],
     directives: [NgFor]
 })
-
 class PostListComponent {
     public post_list:PostList = {
         count: 0,
@@ -57,4 +55,5 @@ class PostListComponent {
             .subscribe(response => this.post_list = response.json());
     }
 }
+//启动组件
 bootstrap(PostListComponent);
