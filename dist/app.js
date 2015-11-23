@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var angular2_1 = require('angular2/angular2');
 var http_1 = require('angular2/http');
+var router_1 = require('angular2/router');
 var PostListComponent = (function () {
     function PostListComponent(jsonp) {
         this.post_list = {
@@ -24,7 +25,13 @@ var PostListComponent = (function () {
     PostListComponent.prototype.getRecentPosts = function (jsonp) {
         var _this = this;
         jsonp.request('http://ng.vaivei.com/api_json/get_recent_posts/')
-            .subscribe(function (response) { return _this.post_list = response.json(); });
+            .subscribe(function (response) {
+            _this.response = response.json();
+            _this.post_list.count = _this.response.count;
+            _this.post_list.count_total = _this.response.count_total;
+            _this.post_list.pages = _this.response.pages;
+            _this.post_list.posts = _this.response.posts;
+        });
     };
     PostListComponent = __decorate([
         angular2_1.Component({
@@ -32,7 +39,14 @@ var PostListComponent = (function () {
             templateUrl: 'jade/post-list.html',
             viewProviders: [http_1.HTTP_PROVIDERS, http_1.JSONP_PROVIDERS],
             directives: [angular2_1.NgFor]
-        }), 
+        }),
+        router_1.RouteConfig([
+            {
+                path: '/post',
+                component: PostListComponent,
+                name: 'PostListComponent'
+            }
+        ]), 
         __metadata('design:paramtypes', [http_1.Http])
     ], PostListComponent);
     return PostListComponent;

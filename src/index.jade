@@ -1,21 +1,27 @@
 html
-    head
-        title
-            | Quick Start
-        script(src="../node_modules/systemjs/dist/system.js")
-        script(src="../node_modules/angular2/bundles/angular2.dev.js")
-        script(src="../node_modules/angular2/bundles/http.dev.js")
-        script.
-            System.config({
-                packages: {
-                    'app': {
-                        defaultExtension: 'js'
-                    }
-                }
-            });
-            System.import('../dist/app.js');
-    body
-        post-list
-            | loading...
+	head
+		title
+			| Quick Start
+
+		script(src="../node_modules/systemjs/dist/system.js")
+
+		script(src="../node_modules/angular2/bundles/angular2.dev.js")
+
+		script(src="../node_modules/angular2/bundles/http.dev.js")
+
+		script(src="../node_modules/angular2/bundles/router.dev.js")
+
+		script.
+			System.config({
+				packages: {
+					'app': {
+						defaultExtension: 'js'
+					}
+				}
+			});
+			System.import('../dist/app.js');
+	body
+		post-list
+			| loading...
 
 
