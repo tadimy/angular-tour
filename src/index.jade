@@ -1,10 +1,21 @@
 html
 	head
+		base(
+		href="/src"
+		)
 		title
 			| Quick Start
 
 		script(src="../node_modules/systemjs/dist/system.js")
-
+		script.
+			System.config({
+				baseUrl: '/posts',
+				packages: {
+					'.': {
+						defaultExtension: 'js'
+					}
+				}
+			});
 		script(src="../node_modules/angular2/bundles/angular2.dev.js")
 
 		script(src="../node_modules/angular2/bundles/http.dev.js")
@@ -12,16 +23,12 @@ html
 		script(src="../node_modules/angular2/bundles/router.dev.js")
 
 		script.
-			System.config({
-				packages: {
-					'app': {
-						defaultExtension: 'js'
-					}
-				}
-			});
-			System.import('../dist/app.js');
+			window.angularDevMode = true;
+			var filename = '../dist/scripts/index.js';
+			System.import(filename).then(function (m) {
+				m.main();
+			}, console.error.bind(console));
 	body
-		post-list
-			| loading...
+		post-app
 
 

@@ -33,6 +33,11 @@
     "systemjs": "0.19.2"
   },
   "devDependencies": {
+    "broccoli": "^0.16.9",
+    "broccoli-funnel": "igorminar/broccoli-funnel#perf-files",
+    "broccoli-slow-trees": "^1.1.0",
+    "broccoli-stew": "^0.2.1",
+    "broccoli-writer": "^0.1.1",
     "live-server": "^0.8.2",
     "typescript": "^1.6.2"
   }

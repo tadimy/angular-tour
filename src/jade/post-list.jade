@@ -1,8 +1,11 @@
-//
-   Created by Angular2 on 15-11-8.
-ul
-    li(
-    "*ng-for"="#post of post_list.posts; #idx = index"
-    )
-        a(href="{{post.url}}")
-            | {{post.title}}
+// Created by Angular2 on 15-11-8.
+post-list
+	ul
+		li(
+		*ng-for="#post of post_list.posts"
+		)
+			a(
+			id="post-{{ post.id }}",
+			[router-link] = "['/Post',{'id':post.id}]"
+			)
+				| {{post.title}}
