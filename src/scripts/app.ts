@@ -1,10 +1,11 @@
-import {bootstrap, Component,EventEmitter, NgFor, View, Inject, provide,Injectable, QueryList} from 'angular2/angular2';
+import {bootstrap, Component,EventEmitter, NgFor, View, Inject, provide,Injectable, QueryList,Observable} from 'angular2/angular2';
 import {Http, HTTP_PROVIDERS, Jsonp, JSONP_PROVIDERS,Response} from 'angular2/http';
 import {RouterLink,RouteConfig, Route, Router,RouteParams,Location,RouterOutlet} from 'angular2/router';
 import {ObservableWrapper, PromiseWrapper, Promise} from 'angular2/src/facade/async';
 import {ListWrapper} from 'angular2/src/facade/collection';
 import {isPresent, DateWrapper} from 'angular2/src/facade/lang';
 import * as db from '../data/post-list'
+import {Observable} from "angular2";
 
 
 @Injectable()
@@ -99,6 +100,18 @@ class WPService {
         return PromiseWrapper.then(this.getData(), (data)=> {
             return data;
         });
+    }
+}
+
+@Injectable()
+class WPRestfulService {
+    baseUrl:string = "http://ng.vaivei.com/api_json/";
+    ready:boolean = false;
+    data:any = '';
+    jsonp:Jsonp;
+
+    getData(url):Observable<Response> {
+        return this.jsonp.get(this.baseUrl + url);
     }
 }
 
