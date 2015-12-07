@@ -91,7 +91,7 @@ class WPService {
 
     posts():Promise<any> {
         return PromiseWrapper.then(this.getData(), (data:any[]) => {
-            console.log(data);
+            //console.log(data);
             return data;
         });
     }
@@ -110,8 +110,17 @@ class WPRestfulService {
     data:any = '';
     jsonp:Jsonp;
 
-    getData(url):Observable<Response> {
-        return this.jsonp.get(this.baseUrl + url);
+    getData(url, jsonp):Promise<any[]> {
+        var p = PromiseWrapper.completer();
+        p.resolve(jsonp.get(this.baseUrl + url));
+        return p.promise;
+    }
+
+    posts(url, jsonp):Promise<any> {
+        return PromiseWrapper.then(this.getData(url, jsonp), (data:any[]) => {
+            console.log(data);
+            return data;
+        });
     }
 }
 
@@ -178,11 +187,12 @@ class PostListComponent {
     public ready:boolean = true;
     public post_list:PostList = new PostList();
 
-    constructor(public router:Router, post:WPService) {
-        PromiseWrapper.then(post.posts(), (data)=> {
-            this.ready = true;
-            this.post_list = new PostList(data.data);
-            console.log(this.post_list)
+    constructor(public router:Router, post:WPService, WPRestful:WPRestfulService, jsonp:Http) {
+        PromiseWrapper.then(WPRestful.posts('get_recent_posts', jsonp), (data)=> {
+            data.subscribe((res) => {
+                this.ready = true;
+                this.post_list = new PostList(res.json())
+            });
         });
     }
 
@@ -191,7 +201,7 @@ class PostListComponent {
 @Component({
     selector: 'post-app',
     templateUrl: "./src/jade/post-app.html",
-    viewProviders: [WPService],
+    viewProviders: [WPService, WPRestfulService],
     directives: [RouterOutlet, RouterLink]
 })
 @RouteConfig([
