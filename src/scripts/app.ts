@@ -193,6 +193,8 @@ class PostListComponent {
                 this.ready = true;
                 this.post_list = new PostList(res.json())
             });
+        }).catch((reason) => {
+            console.log(reason);
         });
     }
 
