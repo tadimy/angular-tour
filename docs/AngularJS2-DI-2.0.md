@@ -88,4 +88,37 @@ provide(Engine, {useClass: otherEngine});
 对比就能发现，长语法可用于为标识(token)与任何对象建立映射关系，可能那个 otherEngine 根本就不是一个描述汽车引擎的类...。这种方式在 AngularJS 1.x 中是不可行的，或者说实现起来很复杂。
 
 ### 其他 provider 配置
+当不需要一个类的实例而仅仅需要一个简单的值（比如一个字符串）时候，可以使用如下的集中方式来配置 provide()
+#### Providing Values
+可以通过 {useValue: value} 这种配置来提供一个简单的值：
+```javascript
+provide(String, {useValue: "Hello World"});
+```
+useValue 会告诉 DI 其配置的一个简单的值。
+#### Providing aliases
+这个机制可以用来为已经注入的依赖取个别名：
+```javascript
+provide(Engine, {useClass: Engine});
+provide(AirplaneEngine, {useExisting: Engine});
+```
+#### Providing factories
+如果你使用过 AngularJS 1.x，factory 这个玩意儿你应该很熟悉，想想都有点小激动，看看怎么用：
+```javascript
+provide(Engine, {useFactory: () => {
+    return function() {
+            if (IS_V8) {
+                return new V8Engine();
+            } else {
+                return new V6Engine();
+            }
+            }
+});
+```
+如果被引用的 factory 还需要其他的依赖，需要再定义一个属性:
+```javascript
+provide(Engine, {
+    useFactory: (car, engine) => {},
+    deps: [Car, Engine]
+    });
+```
 
