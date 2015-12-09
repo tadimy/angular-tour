@@ -7,4 +7,4 @@
 
 ### AngularJS 1.x 中的路由
 
-### AngularJS 2
+### AngularJS 2 中的路由
