@@ -88,7 +88,17 @@ provide(Engine, {useClass: otherEngine});
 对比就能发现，长语法可用于为标识(token)与任何对象建立映射关系，可能那个 otherEngine 根本就不是一个描述汽车引擎的类...。这种方式在 AngularJS 1.x 中是不可行的，或者说实现起来很复杂。
 
 ### 其他 provider 配置
-当不需要一个类的实例而仅仅需要一个简单的值（比如一个字符串）时候，可以使用如下的集中方式来配置 provide()
+当不需要一个类的实例而仅仅需要一个简单的值（比如一个字符串）时候，可以使用如下的集中方式来配置 provide(),下面这段代码是 AngularJS 2.0 中 provide() 方法的描述：
+```typescript
+export provide(token: any, {useClass, useValue, useExisting, useFactory, deps, multi}: {
+  useClass?: Type,
+  useValue?: any,
+  useExisting?: any,
+  useFactory?: Function,
+  deps?: Object[],
+  multi?: boolean
+}) : Provider
+```
 #### Providing Values
 可以通过 {useValue: value} 这种配置来提供一个简单的值：
 ```javascript
@@ -121,4 +131,24 @@ provide(Engine, {
     deps: [Car, Engine]
     });
 ```
+#### Multi:boolean
+指定 multi 参数可为同一个 token 映射多个 provider。 Multi-providers 可被用于创建可嵌入的服务，当系统初始化时自带了一些默认的 provider，用户仍然可以注册其他的 provider。默认 provider 和附加的 provider 同时驱动系统中的各种行为。
+```typescript
+var injector = Injector.resolveAndCreate([
+    new Provider("Strings", {useValue: "String1", multi: true}),
+    new Provider("Strings", {useValue: "String2", multi: true})
+]);
+
+expect(injector.get("Strings").toEqual(["String1", "String2"]);
+```
+但是这么使用是不允许的：
+```typescript
+var injector = Injector.resolveAndCreate([
+    new Provider("Strings", {useValue: "String1", multi: true}),
+    new Provider("Strings", {useValue: "String2"})
+]);
+```
+到此可了解到，新的 DI 解决了很多AngularJS 1 中的问题。
+
+> 注意，新的 DI 仍然会创建单例。
 
