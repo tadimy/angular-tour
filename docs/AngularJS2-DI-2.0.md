@@ -151,4 +151,45 @@ var injector = Injector.resolveAndCreate([
 到此可了解到，新的 DI 解决了很多AngularJS 1 中的问题。
 
 > 注意，新的 DI 仍然会创建单例。
+于是一个新的问题来了，如果需要在程序中实例化一个临时的对象（非单例）应该怎么做？答案是使用 factory。
+```typescript
+provide(Engine, {useFactory: () => {
+    return () => {
+        return new Engine();
+        }
+    }
+});
+```
+这里 Factory 会返回 Engine 类的实例，而不是单例。
 
+#### Child Injector
+AngularJS 2 的 Injector 还提供了一个 resolveAndCreateChild() 方法用来创建一个 child injector。
+```typescript
+class ParentProvider {}
+class ChildProvider {}
+var parent = Injector.resolveAndCreate([ParentProvider]);
+var child = parent.resolveAndCreateChild([ChildProvider]);
+// child injector's ParentProvider is an instance of ParentProvider
+expect(child.get(ParentProvider) instanceof ParentProvider).toBe(true);
+// child injector's ChildProvider is an instance of ChildProvider
+expect(child.get(ChildProvider) instanceof ChildProvider).toBe(true);
+// child injector's ParentProvider is an instance of parent injector's ParentProvider
+expect(child.get(ParentProvider)).toBe(parent.get(ParentProvider));
+```
+这一段代码逻辑稍微复杂一点，但是细心一点就会发现，child 是从 parent 那里继承了ParentProvider，并且自己还增加了 ChildProvider。所以 child 其实注入了两个 provider。
+
+## 实战 AngularJS 2 依赖注入
+前面把 DI2 的一些细节逐一介绍了，接下来通过一个完整的示例程序进一步厘清编写 AngularJS 2 的依赖注入方式。
+```typescript
+@Component({
+    selector: 'app'
+})
+@View({
+    template: '<h1>Hello !</h1>'    
+})
+class App{
+    constructor() {
+        this.name = 'World';
+    }
+}
+```
