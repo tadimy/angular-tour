@@ -8,26 +8,53 @@
 
 * Injector - 注入容器(injection container) 用来实例化对象和解决依赖关系。Injector 是 new 操作符的一个替代方案，借助它可以自动解决构造函数的依赖。程序在构造函数中可通过 Injector解决依赖。
 
-```javascript
-import { Injector } from 'angular2/di';
+[(演示示例)](http://plnkr.co/edit/Bm6jQx?p=preview)
+
+### 代码段
+```typescript
+import { Injector, Injectable } from 'angular2/angular2';
 
 @Injectable()
-class Engine {}
+class Engine{
+  name:string;
+  constructor() {
+    this.name = 'v8';
+  }
+  getName() {
+    return this.name
+  }
+}
+
+class V16Engine{
+  name:string;
+  constructor() {
+    this.name = 'v16';
+  }
+  getName() {
+    return this.name
+  }
+}
 
 @Injectable()
 class Car {
-    constructor(public engine Engine) {}
+    constructor(@Inject(Engine) engine) {
+      this.engine = engine;
     }
+}
 var injector = Injector.resolveAndCreate([Car, Engine]);
 var car = injector.get(Car);
-expect(car instanceof Car).toBe(true);
-expect(car.engine instanceof Engine).toBe(true);
+var injector = Injector.resolveAndCreate([Car, provide(Engine, {useClass: V16Engine})]);
+var car = injector.get(Car);
+var engine = injector.get(Engine);
+expect(car instanceof Car ).toBe(true);
+expect(car.engine instanceof Engine).toBe(false);
+expect(car.engine instanceof V16Engine).toBe(true);
 ```
 
 * Provider - 描述 Injector 实例化依赖的方式
 
 ```javascript
-import { Injector } from 'angular2/di';
+import { Injector } from 'angular2/angular2';
 
 var injector = Injector.resolveAndCreate([
     new Provider("message", {useValue: "Hello"})
@@ -100,19 +127,19 @@ export provide(token: any, {useClass, useValue, useExisting, useFactory, deps, m
   multi?: boolean
 }) : Provider
 ```
-#### Providing Values
+#### useValue
 可以通过 {useValue: value} 这种配置来提供一个简单的值：
 ```javascript
 provide(String, {useValue: "Hello World"});
 ```
 useValue 会告诉 DI 其配置的一个简单的值。
-#### Providing aliases
+#### useExisting
 这个机制可以用来为已经注入的依赖取个别名：
 ```javascript
 provide(Engine, {useClass: Engine});
 provide(AirplaneEngine, {useExisting: Engine});
 ```
-#### Providing factories
+#### useFactory
 如果你使用过 AngularJS 1.x，factory 这个玩意儿你应该很熟悉，想想都有点小激动，看看怎么用：
 ```javascript
 provide(Engine, {useFactory: () => {
@@ -182,15 +209,89 @@ expect(child.get(ParentProvider)).toBe(parent.get(ParentProvider));
 ## 实战 AngularJS 2 依赖注入
 前面把 DI2 的一些细节逐一介绍了，接下来通过一个完整的示例程序进一步厘清编写 AngularJS 2 的依赖注入方式。
 ```typescript
+import { Component, View, bootstrap,Injector, Inject, Injectable, provide} from 'angular2/angular2';
+import { provide } from 'angular2/angular2';
+
+// @Injectable()
+class Engine{
+  name:string;
+  constructor() {
+    this.name = 'v8';
+  }
+  getName() {
+    return this.name
+  }
+}
+
+class V16Engine{
+  name:string;
+  constructor() {
+    this.name = 'v16';
+  }
+  getName() {
+    return this.name
+  }
+}
+
+
+class Tires{
+
+}
+
+class Car{
+  name:string;
+  engine: V16;
+  constructor(
+    @Inject(Engine) engine
+    ){
+      this.name = 'Tesla';
+      this.engine = engine;
+  }
+}
+
+var jasmineEnv = jasmine.getEnv();
+var injector = Injector.resolveAndCreate([Engine, Car]);
+describe("Engine Can Be Inject", function() {
+  it("To be True", function() {
+    expect(injector.get(Car) instanceof Car ).toBe(true);
+  });
+});
+jasmineEnv.execute();
+
 @Component({
-    selector: 'app'
+  selector: 'car',
+  viewProviders: [
+    provide(Engine, {useClass: V16Engine}),
+    Car
+    ]
 })
 @View({
-    template: '<h1>Hello !</h1>'    
+  template: `<dl>
+  <dt>Car Name</dt>
+  <dd>{{car.name}}</dd>
+  <dt>Car Engine Name<dt>
+  <dd>{{car.engine.name}}</dd>
+  </dl>`
+})
+
+class CarCmp{
+  car:Car;
+  constructor(@Inject(Car) car){
+    this.car = car;
+  }
+}
+
+@Component({
+    selector: 'app'
+
+})
+@View({
+    template: '<car></car> ',
+    directives: [CarCmp]
 })
 class App{
-    constructor() {
-        this.name = 'World';
-    }
+
 }
+
+bootstrap(App);
 ```
