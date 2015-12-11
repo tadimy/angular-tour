@@ -1,16 +1,18 @@
 # AngularJS 2.0 依赖注入
 
 ## 什么是依赖注入
-依赖注入，顾名思义，就是把需要的东西(依赖)放在一个注射器里(Injector)推入应用程序内，其中，依赖可以是必需的，也可以是非必需的(Optional)。
+依赖注入，顾名思义，就是把需要的东西(Dependency)放在一个注射器里(Injector)推入应用程序内，依赖(Dependency)可以是必需的，也可以是非必需的(Optional)。
+
+## AngularJS 1.x 的依赖注入
 
 ## 全新的依赖注入方式
 在AngularJS 2 中，其开发团队重新设计了依赖注入，要深入理解新的依赖注入（DI2），先要知道下面三个名词：
 
 * Injector - 注入容器(injection container) 用来实例化对象和解决依赖关系。Injector 是 new 操作符的一个替代方案，借助它可以自动解决构造函数的依赖。程序在构造函数中可通过 Injector解决依赖。
 
-[(演示示例)](http://plnkr.co/edit/Bm6jQx?p=preview)
+[(演示示例)](http://plnkr.co/edit/Bm6jQx)
 
-### 代码段
+##### 代码段
 ```typescript
 import { Injector, Injectable } from 'angular2/angular2';
 
@@ -51,9 +53,11 @@ expect(car.engine instanceof Engine).toBe(false);
 expect(car.engine instanceof V16Engine).toBe(true);
 ```
 
-* Provider - 描述 Injector 实例化依赖的方式
+* Provider - 可以理解为一个可被注入的服务，每一个 Provider 相当于一个原子容器，里面装着的就是需要被注入的依赖以及描述 Injector 实例化依赖的方式。
 
-```javascript
+[(演示示例)](http://plnkr.co/edit/awreV6)
+##### 代码段
+```typescript
 import { Injector } from 'angular2/angular2';
 
 var injector = Injector.resolveAndCreate([
@@ -62,19 +66,20 @@ var injector = Injector.resolveAndCreate([
 
 expect(injector.get("message")).toEqual("Hello");
 ```
+上面这段代码中，注入依赖的方式变成了实例化一个 Provider 对象，与直接在参数里写要注入的对象不同，这种方式提供了多种参数可以配置引入依赖的方式。本文稍后的部分会详细介绍每一种方式的用法。
 
-* Dependency - 依赖(Dependency),即需要被实例化的类型
+* Dependency - 依赖(Dependency), 即在程序初始化的时候需要被引用的模块/类 。
 
 在上面的代码实例中，程序引入了 Injector, 它可以把一些静态的 API 注入程序。其中 resolveAndCreate() 是一个可以创建 injector，它可以接受一个 provider 列表作为参数。注意这一行代码：
 
-```javascript
+```typescript
 var car = injector.get(Car);
+expect(car instanceof Car).toBe(true);
 ```
-
 这行代码可获得一个 Car 的实例，那么 Angular 是如何知道程序想要实例化哪个类呢？再看看这一段代码：
 
 ```javascript
-import { Inject } from 'angular2/di';
+import { Inject } from 'angular2/angular2';
 
 class Car {
     constructor(
@@ -85,9 +90,9 @@ class Car {
 }
 ```
 
-上面的程序从 angular2 DI 中引入了 Inject 模块，并且用它来修饰(decorator) Car 类的构造函数参数。 Inject 装饰器将一些元数据传给 Car类，这些元数据会被 DI 系统使用。所以简单说，@Inject(...) 标记这个构造函数的参数必须是 Engine 的一个实例。下面是使用 Typescript 重写的这段代码：
+上面的程序从 angular2 DI 中引入了 Inject 模块，并且用它来修饰(decorator) Car 类的构造函数参数。 Inject 装饰器将一些元数据传给 Car 类，这些元数据会被 DI 系统使用。所以简单说，@Inject(...) 标记这个构造函数的参数必须是 Engine 的一个实例。下面是使用 Typescript 重写的这段代码：
 
-```javascript
+```typescript
 class Car {
     constructor(engine: Engine) {
         ...
@@ -95,14 +100,14 @@ class Car {
 }
 ```
 这样 DI 就可以从依赖声明里读取任何要初始化 Car 这个类所需要模块。但注入器(Injector)是怎么知道如何创建这个对象呢？这就轮到 providers 登场了。还记得上面讲到的 resolveAndCreate() 方法吗？
-```javascript
+```typescript
 var injector = Injector.resolveAndCreate([
     Car,
     Engine
 ]);
 ```
 看到这段代码你可能会疑惑这个类列表为什么会被识别是一组 providers。其实上面的代码只是使用了简单的语法来描述需要被实例化的依赖类，下面这段代码更清晰的帮助理解其机制：
-```javascript
+```typescript
 var injector = Injector.resolveAndCreate([
     provide(Car, {useClass: Car}),
     provide(Engine, {useClass: Engine})
@@ -110,13 +115,14 @@ var injector = Injector.resolveAndCreate([
 ```
 这段代码中使用了 provide() 函数来为需要被实例化的对象和标识(token)之间建立了映射关系，这里的标识(token)既不是一个类型也不是字符串。代码中使用 Car 类实例化了一个 Car 类型变量，同样使用 Engine 类实例化了一个 Engine 类型变量。通过这种方式，不仅可以向程序中注入指定类作为依赖，并且可以配置这些依赖被注入程序的方式。
 上面提到了本文中最开始使用短语法描述需要被实例化的类，刚刚又有一段用长语法方式来做这个事情，那么什么时候使用短语法？什么时候使用长语法？看看这行代码：
-```javascript
+```typescript
 provide(Engine, {useClass: otherEngine});
 ```
 对比就能发现，长语法可用于为标识(token)与任何对象建立映射关系，可能那个 otherEngine 根本就不是一个描述汽车引擎的类...。这种方式在 AngularJS 1.x 中是不可行的，或者说实现起来很复杂。
 
 ### 其他 provider 配置
 当不需要一个类的实例而仅仅需要一个简单的值（比如一个字符串）时候，可以使用如下的集中方式来配置 provide(),下面这段代码是 AngularJS 2.0 中 provide() 方法的描述：
+
 ```typescript
 export provide(token: any, {useClass, useValue, useExisting, useFactory, deps, multi}: {
   useClass?: Type,
@@ -127,21 +133,22 @@ export provide(token: any, {useClass, useValue, useExisting, useFactory, deps, m
   multi?: boolean
 }) : Provider
 ```
+
 #### useValue
 可以通过 {useValue: value} 这种配置来提供一个简单的值：
-```javascript
+```typescript
 provide(String, {useValue: "Hello World"});
 ```
 useValue 会告诉 DI 其配置的一个简单的值。
 #### useExisting
 这个机制可以用来为已经注入的依赖取个别名：
-```javascript
+```typescript
 provide(Engine, {useClass: Engine});
 provide(AirplaneEngine, {useExisting: Engine});
 ```
 #### useFactory
 如果你使用过 AngularJS 1.x，factory 这个玩意儿你应该很熟悉，想想都有点小激动，看看怎么用：
-```javascript
+```typescript
 provide(Engine, {useFactory: () => {
     return function() {
             if (IS_V8) {
@@ -153,7 +160,7 @@ provide(Engine, {useFactory: () => {
 });
 ```
 如果被引用的 factory 还需要其他的依赖，需要再定义一个属性:
-```javascript
+```typescript
 provide(Engine, {
     useFactory: (car, engine) => {},
     deps: [Car, Engine]
@@ -180,6 +187,7 @@ var injector = Injector.resolveAndCreate([
 
 > 注意，新的 DI 仍然会创建单例。
 于是一个新的问题来了，如果需要在程序中实例化一个临时的对象（非单例）应该怎么做？答案是使用 factory。
+
 ```typescript
 provide(Engine, {useFactory: () => {
     return () => {
