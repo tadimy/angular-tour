@@ -322,3 +322,8 @@ class App{
 
 bootstrap(App);
 ```
+
+参考资料：
+* [Dependency Injection in Angular 2](http://blog.thoughtram.io/angular/2015/05/18/dependency-injection-in-angular-2.html)
+
+* [AngularJS 2 Official Documents](https://angular.io/docs/)
