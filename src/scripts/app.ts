@@ -1,4 +1,4 @@
-import {bootstrap, Component,EventEmitter, NgFor, View, Inject, provide,Injectable, QueryList} from 'angular2/angular2';
+import {bootstrap, Component,EventEmitter, NgFor, View, Inject, provide,Injectable, QueryList, Pipe} from 'angular2/angular2';
 import {Http, HTTP_PROVIDERS, Jsonp, JSONP_PROVIDERS,Response} from 'angular2/http';
 import {RouterLink,RouteConfig, Route, Router,RouteParams,Location,RouterOutlet} from 'angular2/router';
 import {ObservableWrapper, PromiseWrapper, Promise} from 'angular2/src/facade/async';
@@ -6,8 +6,63 @@ import {ListWrapper} from 'angular2/src/facade/collection';
 import {isPresent, DateWrapper} from 'angular2/src/facade/lang';
 import * as db from '../data/post-list'
 import {Observable} from "angular2/angular2";
+import {PipeTransform} from "angular2/angular2";
 
+@Pipe({name: 'escapeHtml', pure: false})
+class EscapeHtmlPipe implements PipeTransform {
+    transform(value:any, args:any[] = []) {
 
+    }
+}
+
+@Injectable()
+class WPService {
+    baseUrl:string = 'http://ng.vaivei.com/api_json/';
+
+    getData():Promise<any[]> {
+        var p = PromiseWrapper.completer();
+        p.resolve(db);
+        return p.promise;
+    }
+
+    posts():Promise<any> {
+        return PromiseWrapper.then(this.getData(), (data:any[]) => {
+            //console.log(data);
+            return data;
+        });
+    }
+
+    post(id):Promise<any> {
+        return PromiseWrapper.then(this.getData(), (data)=> {
+            return data;
+        });
+    }
+}
+
+@Injectable()
+class WPRestfulService {
+    baseUrl:string = "http://ng.vaivei.com/api_json/";
+    ready:boolean = false;
+    data:any = '';
+    jsonp:Jsonp;
+
+    getData(url, jsonp):Promise<any[]> {
+        var p = PromiseWrapper.completer();
+        p.resolve(jsonp.get(this.baseUrl + url));
+        return p.promise;
+    }
+
+    posts(url, jsonp):Promise<any> {
+        return PromiseWrapper.then(this.getData(url, jsonp), (data:any[]) => {
+            console.log(data);
+            return data;
+        });
+    }
+
+    //post(url, jsonp):Promise<any[]> {
+    //    return PromiseWrapper.then(this.getData(url,jsonp),)
+    //}
+}
 @Injectable()
 class PostItem {
     id:string = '';
@@ -78,52 +133,6 @@ class PostItem {
         this.custom_fields = item['custom_fields'];
     }
 }
-
-@Injectable()
-class WPService {
-    baseUrl:string = 'http://ng.vaivei.com/api_json/';
-
-    getData():Promise<any[]> {
-        var p = PromiseWrapper.completer();
-        p.resolve(db);
-        return p.promise;
-    }
-
-    posts():Promise<any> {
-        return PromiseWrapper.then(this.getData(), (data:any[]) => {
-            //console.log(data);
-            return data;
-        });
-    }
-
-    post(id):Promise<any> {
-        return PromiseWrapper.then(this.getData(), (data)=> {
-            return data;
-        });
-    }
-}
-
-@Injectable()
-class WPRestfulService {
-    baseUrl:string = "http://ng.vaivei.com/api_json/";
-    ready:boolean = false;
-    data:any = '';
-    jsonp:Jsonp;
-
-    getData(url, jsonp):Promise<any[]> {
-        var p = PromiseWrapper.completer();
-        p.resolve(jsonp.get(this.baseUrl + url));
-        return p.promise;
-    }
-
-    posts(url, jsonp):Promise<any> {
-        return PromiseWrapper.then(this.getData(url, jsonp), (data:any[]) => {
-            console.log(data);
-            return data;
-        });
-    }
-}
-
 @Injectable()
 class PostList {
     count:string = '';
@@ -157,38 +166,42 @@ class PostList {
 
 @Component({
     selector: 'post',
+    viewProviders: [HTTP_PROVIDERS, JSONP_PROVIDERS, WPRestfulService],
 })
 @View({
     templateUrl: './src/jade/post.html',
-    directives: [NgFor, RouterLink]
 })
 class PostComponent {
     post:PostItem = new PostItem();
     ready:boolean = false;
 
-    constructor(wp:WPService, params:RouteParams) {
+    constructor(wpRestful:WPRestfulService, params:RouteParams, jsonp:Http) {
         var id = params.get('id');
-        PromiseWrapper.then(wp.post(id), (data) => {
-            this.post.setData(data);
+        PromiseWrapper.then(wpRestful.posts('get_post' + '?id=' + id, jsonp), (data) => {
+            data.subscribe((res) => {
+                this.ready = true;
+                this.post = new PostItem(res.json().post);
+                console.log(res.json());
+                console.log(this.post);
+            });
         })
     }
 }
 
 @Component({
     selector: 'post-list',
-    viewProviders: [HTTP_PROVIDERS, JSONP_PROVIDERS]
+    viewProviders: [HTTP_PROVIDERS, JSONP_PROVIDERS, WPService, WPRestfulService]
 })
 @View({
     templateUrl: './src/jade/post-list.html',
     directives: [NgFor, RouterLink]
 })
 class PostListComponent {
-    //public post_list:PostList = new PostList();
     public ready:boolean = true;
     public post_list:PostList = new PostList();
 
-    constructor(public router:Router, post:WPService, WPRestful:WPRestfulService, jsonp:Http) {
-        PromiseWrapper.then(WPRestful.posts('get_recent_posts', jsonp), (data)=> {
+    constructor(public router:Router, wpService:WPService, wpRestful:WPRestfulService, jsonp:Http) {
+        PromiseWrapper.then(wpRestful.posts('get_recent_posts', jsonp), (data)=> {
             data.subscribe((res) => {
                 this.ready = true;
                 this.post_list = new PostList(res.json())
@@ -203,7 +216,6 @@ class PostListComponent {
 @Component({
     selector: 'post-app',
     templateUrl: "./src/jade/post-app.html",
-    viewProviders: [WPService, WPRestfulService],
     directives: [RouterOutlet, RouterLink]
 })
 @RouteConfig([
