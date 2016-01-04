@@ -1,8 +1,6 @@
-/**
- * Created by Angular2 on 15-11-27.
- */
 import {PostListApp} from "./app"
-import {bind, provide} from 'angular2/angular2';
+
+import {bind, provide} from 'angular2/core'
 import {bootstrap} from 'angular2/bootstrap';
 import {ROUTER_PROVIDERS, HashLocationStrategy, LocationStrategy} from 'angular2/router';
 

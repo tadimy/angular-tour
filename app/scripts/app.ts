@@ -1,17 +1,17 @@
-import {bootstrap, Component,EventEmitter, NgFor, View, Inject, provide,Injectable, QueryList, Pipe} from 'angular2/angular2';
+import { Component,EventEmitter, View, Inject, provide,Injectable, QueryList, Pipe} from 'angular2/core';
+import {bootstrap} from 'angular2/bootstrap';
+import {NgFor} from 'angular2/common';
 import {Http, HTTP_PROVIDERS, Jsonp, JSONP_PROVIDERS,Response} from 'angular2/http';
-import {RouterLink,RouteConfig, Route, Router,RouteParams,Location,RouterOutlet} from 'angular2/router';
-import {ObservableWrapper, PromiseWrapper, Promise} from 'angular2/src/facade/async';
+import {RouterLink, RouteConfig, Route, Router,RouteParams,Location,RouterOutlet} from 'angular2/router';
+import {ObservableWrapper, Observable, PromiseWrapper, Promise} from 'angular2/src/facade/async';
 import {ListWrapper} from 'angular2/src/facade/collection';
 import {isPresent, DateWrapper} from 'angular2/src/facade/lang';
 import * as db from '../data/post-list'
-import {Observable} from "angular2/angular2";
-import {PipeTransform} from "angular2/angular2";
+import {PipeTransform} from "angular2/core";
 
 @Pipe({name: 'escapeHtml', pure: false})
 class EscapeHtmlPipe implements PipeTransform {
     transform(value:any, args:any[] = []) {
-
     }
 }
 
@@ -169,7 +169,7 @@ class PostList {
     viewProviders: [HTTP_PROVIDERS, JSONP_PROVIDERS, WPRestfulService],
 })
 @View({
-    templateUrl: './src/jade/post.html',
+    templateUrl: './app/jade/post.html',
 })
 class PostComponent {
     post:PostItem = new PostItem();
@@ -193,7 +193,7 @@ class PostComponent {
     viewProviders: [HTTP_PROVIDERS, JSONP_PROVIDERS, WPService, WPRestfulService]
 })
 @View({
-    templateUrl: './src/jade/post-list.html',
+    templateUrl: './app/jade/post-list.html',
     directives: [NgFor, RouterLink]
 })
 class PostListComponent {
@@ -215,7 +215,7 @@ class PostListComponent {
 
 @Component({
     selector: 'post-app',
-    templateUrl: "./src/jade/post-app.html",
+    templateUrl: "./app/jade/post-app.html",
     directives: [RouterOutlet, RouterLink]
 })
 @RouteConfig([

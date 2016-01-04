@@ -1,0 +1,31 @@
+html
+	head
+		base(
+		href="/"
+		)
+		title
+			| Quick Start
+
+		script(src="../node_modules/systemjs/dist/system.js")
+		script.
+			System.config({
+				baseUrl: '/posts',
+				packages: {
+					'.': {
+						defaultExtension: 'js'
+					}
+				}
+			});
+		//script(s)
+		script(src="../node_modules/reflect-metadata/Reflect.js")
+		script(src="../node_modules/zone.js/dist/zone.min.js")
+		script.
+			window.angularDevMode = true;
+			var filename = 'scripts/index.js';
+			System.import(filename).then(function (m) {
+				m.main();
+			}, console.error.bind(console));
+	body
+		post-app
+
+

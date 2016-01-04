@@ -82,3 +82,5 @@ crashlytics-build.properties
 /bower_components
 /dist
 *.swp
+.sass-cache
+test/bower_components

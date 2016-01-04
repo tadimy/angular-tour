@@ -1,12 +1,12 @@
 html
 	head
 		base(
-		href="/src"
+		href="/"
 		)
 		title
 			| Quick Start
 
-		script(src="../node_modules/systemjs/dist/system.js")
+		script(src="node_modules/systemjs/dist/system.js")
 		script.
 			System.config({
 				baseUrl: '/posts',
@@ -16,15 +16,12 @@ html
 					}
 				}
 			});
-		script(src="../node_modules/angular2/bundles/angular2.dev.js")
-
-		script(src="../node_modules/angular2/bundles/http.dev.js")
-
-		script(src="../node_modules/angular2/bundles/router.dev.js")
-
+		script(src="node_modules/es6-shim/es6-shim.min.js")
+		script(src="node_modules/reflect-metadata/Reflect.js")
+		script(src="node_modules/zone.js/dist/zone.min.js")
 		script.
 			window.angularDevMode = true;
-			var filename = '../dist/scripts/index.js';
+			var filename = 'app/scripts/index.js';
 			System.import(filename).then(function (m) {
 				m.main();
 			}, console.error.bind(console));

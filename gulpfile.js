@@ -4,201 +4,323 @@
 'use strict';
 
 var gulp = require('gulp');
+var args = require('yargs').argv;
+var browserSync = require('browser-sync');
+var config = require('./gulp.config')();
 var del = require('del');
-var autoprefixer = require('gulp-autoprefixer');
-var path = require('path');
-var runSequence = require('run-sequence');
-var sass = require('gulp-sass');
+var tsc = require('gulp-typescript');
+var htmlify = require('gulp-angular-htmlify');
+var fs = require('fs');
+var $ = require('gulp-load-plugins')({lazy: true});
+var APP_BASE = '/';
 
+var tsProject = tsc.createProject('tsconfig.json', {
+    typescript: require('typescript')
+});
 
-function throwToolsBuildMissingError() {
-    throw new Error('ERROR: build.tools task should have been run before using angularBuilder');
-}
-
-var angularBuilder = {
-    rebuildBrowserDevTree: throwToolsBuildMissingError,
-    rebuildBrowserProdTree: throwToolsBuildMissingError,
-    rebuildNodeTree: throwToolsBuildMissingError,
-    rebuildDartTree: throwToolsBuildMissingError,
-    uninitialized: true
-};
-
-function sequenceComplete(done) {
-    return function (err) {
-        if (err) {
-            var error = new Error('build sequence failed');
-            error.showStack = false;
-            done(error);
-        } else {
-            done();
-        }
+function templateLocals() {
+    return {
+        VERSION: getVersion(),
+        APP_BASE: APP_BASE
     };
 }
-var BUILD_CONFIG = {
-    dest: {
-        js: {
-            all: 'dist/scripts/',
-            dev: {
-                es6: 'dist/scripts/dev/es6',
-                es5: 'dist/scripts/dev/es5'
-            },
-            prod: {
-                es5: 'dist/scripts/prod/es5',
-                es6: 'dist/scripts/prod/es6'
+function getVersion() {
+    var pkg = JSON.parse(fs.readFileSync('package.json'));
+    return pkg.version;
+}
+gulp.task('help', $.taskListing);
+gulp.task('default', ['help']);
+
+gulp.task('vet', function () {
+    log('Analyzing source with JSHint and JSCS');
+
+    return gulp
+        .src(config.alljs)
+        .pipe($.if(args.verbose, $.print()))
+        .pipe($.jscs())
+        .pipe($.jshint())
+        .pipe($.jshint.reporter('jshint-stylish', {verbose: true}))
+        .pipe($.jshint.reporter('fail'));
+});
+
+gulp.task('clean-tmp', function (done) {
+    var files = config.tmp;
+    clean(files, done);
+});
+
+gulp.task('clean', function (done) {
+    var delconfig = [].concat(config.dist, config.tmp);
+    log('Cleaning ' + $.util.colors.blue(delconfig));
+    del(delconfig, done);
+});
+
+gulp.task('clean-all', function (done) {
+    var delconfig = config.allToClean;
+    log('Cleaning ' + $.util.colors.blue(delconfig));
+    clean(delconfig, done);
+});
+
+gulp.task('jade-docs', function () {
+    log('Compiling docs jade --> html');
+
+    var options = {
+        pretty: false
+    };
+
+    return gulp
+        .src(config.docsJade)
+        .pipe($.jade(options))
+        .pipe(gulp.dest(config.docs));
+});
+
+gulp.task('less', function () {
+    log('Compiling Less --> CSS');
+
+    return gulp
+        .src(config.less)
+        .pipe($.plumber())
+        .pipe($.less())
+        .pipe($.autoprefixer({browsers: ['last 2 version', '> 2%']}))
+        .pipe(gulp.dest(config.tmp));
+});
+
+gulp.task('less-watcher', function () {
+    gulp.watch([config.less], ['less']);
+});
+
+gulp.task('sass', function () {
+    log('Compiling Sass --> CSS');
+
+    var sassOptions = {
+        outputStyle: 'nested' // nested, expanded, compact, compressed
+    };
+
+    return gulp
+        .src(config.sass)
+        .pipe($.plumber())
+        .pipe($.sourcemaps.init())
+        .pipe($.sass(sassOptions))
+        .pipe($.sourcemaps.write())
+        .pipe(gulp.dest(config.tmp + '/styles'));
+});
+
+gulp.task('sass-min', function () {
+    log('Compiling Sass --> minified CSS');
+
+    var sassOptions = {
+        outputStyle: 'compressed' // nested, expanded, compact, compressed
+    };
+
+    return gulp
+        .src(config.sass)
+        .pipe($.plumber())
+        .pipe($.sass(sassOptions))
+        .pipe(gulp.dest(config.tmp + '/styles'));
+});
+
+gulp.task('sass-watcher', function () {
+    gulp.watch([config.sass], ['sass']);
+});
+
+gulp.task('jade', function () {
+    log('Compiling Jade --> HTML');
+
+    var jadeOptions = {
+        doctype: 'html'
+    };
+    return gulp
+        .src(config.jade)
+        .pipe($.plumber())
+        .pipe($.jade(jadeOptions))
+        .pipe(htmlify())
+        .pipe(gulp.dest(config.tmp + '/views'))
+});
+
+gulp.task('js', function () {
+    var result = gulp.src(config.allTs)
+        .pipe($.plumber())
+        .pipe($.sourcemaps.init())
+        .pipe(tsc(tsProject));
+
+    return result.js
+        .pipe($.sourcemaps.write())
+        .pipe($.template(templateLocals()))
+        .pipe(gulp.dest(config.app + '/scripts'))
+        .pipe(gulp.dest(config.tmp));
+});
+gulp.task('inject', function () {
+    log('Injecting custom scripts to index.html');
+
+    return gulp
+        .src(config.index)
+        .pipe($.inject(gulp.src(config.js), {relative: true}))
+        .pipe(gulp.dest(config.app));
+});
+
+gulp.task('copy', function () {
+    log('Copying assets');
+
+    return gulp
+        .src(config.assets, {base: config.app})
+        .pipe(gulp.dest(config.dist + '/'));
+});
+
+gulp.task('optimize', ['inject', 'sass-min', 'jade'], function () {
+    log('Optimizing the js, css, html');
+
+    var assets = $.useref.assets({
+        searchPath: [config.app, config.tmp]
+    });
+    var cssFilter = $.filter('**/*.css', {restore: true});
+    var jsFilter = $.filter('**/*.js', {restore: true});
+
+    return gulp
+        .src(config.index)
+        .pipe($.plumber())
+        .pipe(assets)
+
+        .pipe(cssFilter)
+        .pipe($.concat('styles/main.css'))
+        .pipe(cssFilter.restore)
+
+        .pipe(jsFilter)
+        .pipe($.uglify())
+        .pipe(jsFilter.restore)
+
+        .pipe(assets.restore())
+        .pipe($.useref())
+        .pipe(gulp.dest(config.dist));
+});
+
+
+gulp.task('serve', ['inject', 'sass', 'jade'], function () {
+    startBrowserSync('serve');
+});
+
+gulp.task('build', ['optimize', 'copy'], function () {
+    startBrowserSync('dist');
+});
+
+gulp.task('serve-dist', function () {
+    gulp.run('build');
+});
+
+gulp.task('serve-docs', ['jade-docs'], function () {
+    startBrowserSync('docs');
+});
+
+
+function clean(path, done) {
+    log('Cleaning: ' + $.util.colors.blue(path));
+    del(path, done);
+}
+
+function log(msg) {
+    if (typeof(msg) === 'object') {
+        for (var item in msg) {
+            if (msg.hasOwnProperty(item)) {
+                $.util.log($.util.colors.green(msg[item]));
             }
-        },
-        html: {
-            all: 'dist/views/'
-        },
-        css: {
-            all: 'dist/styles/'
         }
-    },
-    src: {
-        scripts: 'src/scripts',
-        jade: 'src/jade',
-        styles: 'src/styles'
-    },
-    docs: {}
-};
-
-function doCheckFormat() {
-    return gulp.src(['modules/**/*.ts', 'tools/**/*.ts', '!**/typings/**/*.d.ts'])
-        .pipe(gulpFormat.checkFormat('file', clangFormat));
-}
-
-gulp.task('check-format', function() {
-    return doCheckFormat().on('warning', function(e) {
-        console.log("NOTE: this will be promoted to an ERROR in the continuous build");
-    });
-});
-
-gulp.task('enforce-format', function() {
-    return doCheckFormat().on('warning', function(e) {
-        console.log("ERROR: You forgot to run clang-format on your change.");
-        console.log("See https://github.com/angular/angular/blob/master/DEVELOPER.md#clang-format");
-        process.exit(1);
-    });
-});
-
-gulp.task('lint', ['build.tools'], function() {
-    var tslint = require('gulp-tslint');
-    // Built-in rules are at
-    // https://github.com/palantir/tslint#supported-rules
-    var tslintConfig = {
-        "rules": {
-            "requireInternalWithUnderscore": true,
-            "requireParameterType": true,
-            "requireReturnType": true,
-            "semicolon": true,
-            "variable-name": [true, "ban-keywords"]
-        }
-    };
-    return gulp.src(['modules/angular2/src/**/*.ts', '!modules/angular2/src/testing/**'])
-        .pipe(tslint({
-            tslint: require('tslint').default,
-            configuration: tslintConfig,
-            rulesDirectory: 'dist/tools/tslint'
-        }))
-        .pipe(tslint.report('prose', {emitError: true}));
-});
-
-gulp.task('build/clean.tools', function () {
-    del(path.join('dist', 'tools'));
-});
-gulp.task('build/clean.js', function (done) {
-    del(BUILD_CONFIG.dest.js.all, done);
-});
-
-
-//Server
-function jsServeDev() {
-    return jsserve(gulp, gulpPlugins, {
-        path: CONFIG.dest.js.dev.es5,
-        port: 8000
-    })();
-}
-
-function jsServeProd() {
-    return jsserve(gulp, gulpPlugins, {
-        path: CONFIG.dest.js.prod.es5,
-        port: 8001
-    })();
-}
-
-gulp.task('build.js.prod', ['build.tools'], function (done) {
-
-});
-
-//todo
-gulp.task('build.js.dev', ['build/clean.js'], function (done) {
-    runSequence(
-
-    )
-});
-
-gulp.task('serve.js.dev', ['build.js'], function (neverDone) {
-
-});
-gulp.task('serve.js.prod', jsServeProd());
-
-// public task to build tools
-gulp.task('build.tools', ['build/clean.tools'], function (done) {
-    runSequence('!build.tools', sequenceComplete(done));
-});
-
-
-// private task to build tools
-gulp.task('!build.tools', function () {
-    var stream = gulp.src(['tools/**/*.ts'])
-        .pipe(sourcemaps.init())
-        .pipe(tsc({
-            target: 'ES5', module: 'commonjs',
-            // Don't use the version of typescript that gulp-typescript depends on
-            // see https://github.com/ivogabe/gulp-typescript#typescript-version
-            typescript: require('typescript')
-        }))
-        .on('error', function (error) {
-            // nodejs doesn't propagate errors from the src stream into the final stream so we are
-            // forwarding the error into the final stream
-            stream.emit('error', error);
-        })
-        .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest('dist/tools'))
-        .on('end', function () {
-            var AngularBuilder = require('./dist/tools/broccoli/angular_builder').AngularBuilder;
-            angularBuilder = new AngularBuilder({
-                outputPath: 'dist',
-                dartSDK: DART_SDK,
-                logs: logs
-            });
-        });
-
-    return stream;
-});
-
-gulp.task('build.css.material', function () {
-    return gulp.src('src/**/*.scss')
-        .pipe(sass())
-        .pipe(autoprefixer())
-        .pipe(gulp.dest(BUILD_CONFIG.dest.js.prod.es5))
-        .pipe(gulp.dest(BUILD_CONFIG.dest.js.dev.es5));
-});
-
-gulp.task('build.js.material', function (done) {
-    runSequence('build.js/dev', 'build.css.material', sequenceComplete(done));
-});
-
-gulp.task('cleanup.builder', function () {
-    return angularBuilder.cleanup();
-});
-
-process.on('SIGINT', function () {
-    if (!angularBuilder.uninitialized) {
-        runSequence('cleanup.builder', function () {
-            process.exit();
-        });
     } else {
-        process.exit();
+        $.util.log($.util.colors.green(msg));
     }
-});
+}
+
+// function changeEvent(event) {
+
+// }
+
+function startBrowserSync(opt) {
+    if (args.nosync || browserSync.active) {
+        return;
+    }
+
+    var options = {
+        port: 3000,
+        ghostMode: {
+            clicks: false,
+            location: false,
+            forms: false,
+            scroll: true
+        },
+        injectChanges: true,
+        logFileChanges: true,
+        logLevel: 'debug',
+        logPrefix: 'gulp-patterns',
+        notify: true,
+        reloadDelay: 0, //1000,
+        online: false
+    };
+
+    switch (opt) {
+        case 'dist':
+            log('Serving dist app');
+            serveDistApp();
+            break;
+        case 'docs':
+            log('Serving docs');
+            serveDocs();
+            break;
+        default:
+            log('Serving app');
+            serveApp();
+            break;
+    }
+
+    function serveApp() {
+        gulp.watch([config.sass], ['sass']);
+
+        options.server = {
+            baseDir: [
+                './',
+                './node_modules',
+                config.app,
+                config.tmp
+            ]
+        };
+        options.files = [
+            config.app + '/**/*.*',
+            '!' + config.sass,
+            config.tmp + '/**/*.css'
+        ];
+
+        options.routes = {
+            //"/node_modules": config.root + "/node_modules",
+            //"/rxjs": config.root + "/node_modules/rxjs"
+        };
+
+        browserSync(options);
+    }
+
+    function serveDistApp() {
+        options.server = {
+            baseDir: [
+                config.dist
+            ]
+        };
+        options.files = [];
+
+        browserSync(options);
+    }
+
+    function serveDocs() {
+        gulp.watch([config.docsJade], ['jade-docs']);
+
+        options.server = {
+            baseDir: [
+                config.docs
+            ]
+        };
+
+        options.files = [
+            config.docs + '/index.html',
+            '!' + config.jade
+        ];
+
+        browserSync(options);
+    }
+
+}
+
+

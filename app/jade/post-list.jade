@@ -1,0 +1,11 @@
+// Created by Angular2 on 15-11-8.
+post-list
+	ul
+		li(
+		"*ngFor"="#post of post_list.posts;#i = index"
+		)
+			a(
+			id='post-{{ post.id }}',
+			[routerLink] = "['/Post',{'id':post.id}]"
+			)
+				| {{post.title}}

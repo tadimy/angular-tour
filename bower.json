@@ -4,6 +4,7 @@
   "authors": [
     "tadimy <toleranhink@gmail.com>"
   ],
+  "directory": "app/bower_components",
   "description": "An Angular2 Tour",
   "license": "MIT",
   "homepage": "ng.vaivei.com",
@@ -17,5 +18,9 @@
   "dependencies": {
     "bootstrap": "~3.3.0",
     "jquery": "~2.1.3"
+  },
+  "devDependencies": {
+    "mocha": "~2.3.4",
+    "chai": "~3.4.2"
   }
 }
