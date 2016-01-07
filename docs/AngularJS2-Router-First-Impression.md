@@ -21,4 +21,17 @@
 ])
 ```
 
-2. 路由
+2. Router Outlet
+  Route Outlet 是一个为 AngularJS 动态填充内容准备的占位符
+  使用方法：
+  ```html
+  <router-outlet></router-outlet>
+  ```
+  那么 AngularJS 会在这个标签里填充什么内容呢？
+  根据上面的路由配置(`RouterConfig`), 当我们访问 `/posts` 的时候，程序会在`Router Outlet`中渲染`PostListComponent`。
+3. Router Link
+  `Router Link`是`AngularJS2`中一个很常见的指令(`Directive`)，它被用来在页面中定义路由链接。
+  使用方法：
+  ```html
+  <a [routerLink] = "['/Posts']"></a>
+  ```
